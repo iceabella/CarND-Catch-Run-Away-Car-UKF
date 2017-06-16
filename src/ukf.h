@@ -67,6 +67,18 @@ public:
   ///* Sigma point spreading parameter
   double lambda_;
 
+  ///* Predicted position in n_t_ time steps vector
+  VectorXd x_nt_;
+
+  ///* Covariance matrix for predicted state in n_t_ time steps
+  MatrixXd P_nt_;
+
+  ///* Number of time steps to predict in future
+  int n_t_;
+
+  ///* Fixed time step interval used for prediction 
+  const double dt_ = 0.1;
+
 
   /**
    * Constructor
@@ -90,6 +102,13 @@ public:
    * @param delta_t Time between k and k+1 in s
    */
   void Prediction(double delta_t);
+
+  /**
+   * Prediction_nt Predicts sigma points, the state, and the state covariance
+   * matrix n_t_ time steps into the future
+   * @param delta_t fixed time step interval in s
+   */
+  void Prediction_nt(int n_t);
 
   /**
    * Updates the state and the state covariance matrix using a laser measurement

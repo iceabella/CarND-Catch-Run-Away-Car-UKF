@@ -29,7 +29,7 @@ int main()
 {
   uWS::Hub h;
 
-  // Create a UKF instance
+  // Create an UKF instance
   UKF ukf;
   
   double target_x = 0.0;
@@ -108,6 +108,27 @@ int main()
 	  target_x = ukf.x_[0];
 	  target_y = ukf.x_[1];
 
+	  //std::cout << "x: " << ukf.x_nt_ << std::endl;
+	  //std::cout << "P: " << ukf.P_nt_ << std::endl;
+
+	  // calculate distance between vehicles
+	  double distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
+	  int nt = 0;
+
+	  // the further away from target we predict and aim for a position further into the future 
+	  if(distance_difference > 5)
+		nt = 6;
+	  else if(distance_difference > 1 && distance_difference < 5)
+		nt = 4;
+	  else
+		nt = 3;
+	  // Predict nt time steps into the future
+  	  ukf.Prediction_nt(nt);
+	  
+	  // target position nt steps into the future
+	  target_x = ukf.x_nt_[0];
+	  target_y = ukf.x_nt_[1];	
+
     	  double heading_to_target = atan2(target_y - hunter_y, target_x - hunter_x);
     	  while (heading_to_target > M_PI) heading_to_target-=2.*M_PI; 
     	  while (heading_to_target <-M_PI) heading_to_target+=2.*M_PI;
@@ -116,7 +137,7 @@ int main()
     	  while (heading_difference > M_PI) heading_difference-=2.*M_PI; 
     	  while (heading_difference <-M_PI) heading_difference+=2.*M_PI;
 
-    	  double distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
+    	  distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
 
           json msgJson;
           msgJson["turn"] = heading_difference;
@@ -171,90 +192,3 @@ int main()
   }
   h.run();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
