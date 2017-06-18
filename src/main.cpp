@@ -34,8 +34,9 @@ int main()
   
   double target_x = 0.0;
   double target_y = 0.0;
+  bool first_run = true;
 
-  h.onMessage([&ukf,&target_x,&target_y](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&ukf,&target_x,&target_y,&first_run](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -107,27 +108,27 @@ int main()
 
 	  target_x = ukf.x_[0];
 	  target_y = ukf.x_[1];
+	  double distance_difference;
 
-	  //std::cout << "x: " << ukf.x_nt_ << std::endl;
-	  //std::cout << "P: " << ukf.P_nt_ << std::endl;
+	  if(!first_run){
+		  // calculate distance between vehicles
+		  distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
+		  int nt = 0;
 
-	  // calculate distance between vehicles
-	  double distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
-	  int nt = 0;
-
-	  // the further away from target we predict and aim for a position further into the future 
-	  if(distance_difference > 5)
-		nt = 6;
-	  else if(distance_difference > 1 && distance_difference < 5)
-		nt = 4;
-	  else
-		nt = 3;
-	  // Predict nt time steps into the future
-  	  ukf.Prediction_nt(nt);
-	  
-	  // target position nt steps into the future
-	  target_x = ukf.x_nt_[0];
-	  target_y = ukf.x_nt_[1];	
+		  // the further away from target we predict and aim for a position further into the future 
+		  if(distance_difference > 5)
+			nt = 7;
+		  else if(distance_difference > 0.7 && distance_difference < 5)
+			nt = 4;
+		  else if(distance_difference < 0.7)
+			nt = 3;
+		  // Predict nt time steps into the future
+	  	  ukf.Prediction_nt(nt);
+		  
+		  // target position nt steps into the future
+		  target_x = ukf.x_nt_[0];
+		  target_y = ukf.x_nt_[1];
+	  }	
 
     	  double heading_to_target = atan2(target_y - hunter_y, target_x - hunter_x);
     	  while (heading_to_target > M_PI) heading_to_target-=2.*M_PI; 
@@ -138,6 +139,7 @@ int main()
     	  while (heading_difference <-M_PI) heading_difference+=2.*M_PI;
 
     	  distance_difference = sqrt((target_y - hunter_y)*(target_y - hunter_y) + (target_x - hunter_x)*(target_x - hunter_x));
+	  first_run = false;
 
           json msgJson;
           msgJson["turn"] = heading_difference;
